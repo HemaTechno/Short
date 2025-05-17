@@ -1,34 +1,111 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>تسجيل دخول بجوجل + إرسال رسالة ترحيب</title>
+  <title>تسجيل دخول جوجل فخم</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://cdn.emailjs.com/sdk/3.2.0/email.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
+
+    body {
+      background: linear-gradient(135deg, #1e1e2f, #3b3b5c);
+      font-family: 'Cairo', sans-serif;
+      color: #eee;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 40px;
+      font-weight: 700;
+      font-size: 2.5rem;
+      letter-spacing: 2px;
+      text-shadow: 0 0 8px #3b3b5c;
+    }
+
+    #login-btn {
+      background: #4285F4;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 6px 12px rgba(66, 133, 244, 0.6);
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+    #login-btn:hover {
+      background: #357ae8;
+      box-shadow: 0 8px 20px rgba(53, 122, 232, 0.8);
+      transform: translateY(-3px);
+    }
+
+    #login-btn:active {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(53, 122, 232, 0.7);
+    }
+
+    #login-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: white;
+    }
+
+    #status {
+      margin-top: 30px;
+      font-size: 1.1rem;
+      min-height: 1.5em;
+      color: #ffd700;
+      text-shadow: 0 0 4px #ffd700;
+    }
+  </style>
 </head>
 <body>
-  <h1>تسجيل دخول بجوجل وإرسال رسالة ترحيب</h1>
-  <button id="login-btn">تسجيل الدخول بجوجل</button>
+
+  <h1>تسجيل دخول باستخدام حساب جوجل</h1>
+
+  <button id="login-btn">
+    <svg viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg">
+      <path d="M533.5 278.4c0-18.4-1.6-36-4.6-53.2H272.1v100.8h147.3c-6.4 34.7-26.3 64.2-56.1 83.9v69h90.6c53.1-49 83.6-121 83.6-200.5z" fill="#4285F4"/>
+      <path d="M272.1 544.3c76.6 0 141-25.3 188-68.9l-90.6-69c-25.1 17-57.4 27-97.4 27-74.9 0-138.5-50.6-161.2-118.4h-95.4v74.5c46.3 92.2 140 154.8 256.6 154.8z" fill="#34A853"/>
+      <path d="M110.9 327.7c-11.4-34-11.4-70.6 0-104.6v-74.5h-95.4c-38.7 76.8-38.7 168.4 0 245.2l95.4-66.1z" fill="#FBBC05"/>
+      <path d="M272.1 107.7c41.6-.6 81.4 15.6 111.8 44.9l83.6-83.6c-50.6-47.1-115-75-195.4-75-116.6 0-210.3 62.6-256.6 154.8l95.4 74.5c22.7-67.7 86.3-118.1 161.2-115.6z" fill="#EA4335"/>
+    </svg>
+    تسجيل الدخول بجوجل
+  </button>
+
   <div id="status"></div>
 
   <script>
-    // إعداد Firebase
     const firebaseConfig = {
-  apiKey: "AIzaSyAFIYOG72TVwBbm_-M4O2fULVbAV5M1c60",
-  authDomain: "link-17d13.firebaseapp.com",
-  projectId: "link-17d13",
-  storageBucket: "link-17d13.firebasestorage.app",
-  messagingSenderId: "82805682441",
-  appId: "1:82805682441:web:5a921fdcdd2c2a236623d8",
-  measurementId: "G-TMQV1S5BPG"
-};
+      apiKey: "AIzaSyAFIYOG72TVwBbm_-M4O2fULVbAV5M1c60",
+      authDomain: "link-17d13.firebaseapp.com",
+      projectId: "link-17d13",
+      storageBucket: "link-17d13.firebasestorage.app",
+      messagingSenderId: "82805682441",
+      appId: "1:82805682441:web:5a921fdcdd2c2a236623d8",
+      measurementId: "G-TMQV1S5BPG"
+    };
     firebase.initializeApp(firebaseConfig);
 
     const auth = firebase.auth();
 
     // إعداد EmailJS
-    emailjs.init("sCPwwv_HxKqZ4Cv3X"); // Public Key
+    emailjs.init("sCPwwv_HxKqZ4Cv3X");
 
     const loginBtn = document.getElementById('login-btn');
     const statusDiv = document.getElementById('status');
@@ -57,5 +134,6 @@
         });
     };
   </script>
+
 </body>
 </html>
