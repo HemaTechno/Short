@@ -1,38 +1,47 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>نظام تسجيل وتحقق</title>
+  <meta charset="UTF-8">
+  <title>تسجيل دخول Google + تحقق</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <style>
     body {
+      background: #121212;
+      color: #fff;
       font-family: sans-serif;
-      background: #111;
-      color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
     }
-    input, button {
-      margin: 10px;
-      padding: 10px;
+
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      background: #4285F4;
+      border: none;
+      border-radius: 30px;
+      color: white;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    #status {
+      margin-top: 20px;
       font-size: 16px;
+      color: yellow;
     }
   </style>
 </head>
 <body>
 
-  <h1>تسجيل مستخدم جديد</h1>
-  <input type="email" id="email" placeholder="البريد الإلكتروني" />
-  <input type="password" id="password" placeholder="كلمة المرور" />
-  <button onclick="register()">تسجيل</button>
+  <h1>تسجيل دخول باستخدام Google</h1>
+  <button onclick="signInWithGoogle()">تسجيل الدخول</button>
   <div id="status"></div>
 
   <script>
-    // إعداد Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAFIYOG72TVwBbm_-M4O2fULVbAV5M1c60",
       authDomain: "link-17d13.firebaseapp.com",
@@ -42,23 +51,28 @@
       appId: "1:82805682441:web:5a921fdcdd2c2a236623d8",
       measurementId: "G-TMQV1S5BPG"
     };
+
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    function register() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const status = document.getElementById("status");
+    function signInWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(result => {
+          const user = result.user;
 
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(userCredential => {
-          const user = userCredential.user;
-          user.sendEmailVerification().then(() => {
-            status.innerHTML = "✅ تم إرسال رسالة تحقق إلى بريدك. تحقق منه لتفعيل الحساب.";
-          });
+          if (user.emailVerified) {
+            document.getElementById('status').innerText = `✅ مرحبًا ${user.displayName}، بريدك مُفعّل ويمكنك المتابعة.`;
+          } else {
+            user.sendEmailVerification().then(() => {
+              document.getElementById('status').innerText = `🚨 تم إرسال رسالة تحقق إلى بريدك (${user.email})، يرجى التحقق منه ثم إعادة الدخول.`;
+              auth.signOut();
+            });
+          }
         })
         .catch(error => {
-          status.innerHTML = "❌ خطأ: " + error.message;
+          console.error(error);
+          document.getElementById('status').innerText = "❌ حدث خطأ أثناء تسجيل الدخول.";
         });
     }
   </script>
