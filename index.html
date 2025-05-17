@@ -5,6 +5,7 @@
   <title>تسجيل دخول جوجل فخم</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
@@ -47,6 +48,7 @@
       transition: all 0.3s ease;
       user-select: none;
     }
+
     #login-btn:hover {
       background: #357ae8;
       box-shadow: 0 8px 20px rgba(53, 122, 232, 0.8);
@@ -89,61 +91,56 @@
 
   <div id="status"></div>
 
-  <!-- تحميل مكتبة EmailJS قبل أي استخدام لها -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-
   <script>
     window.onload = () => {
       const firebaseConfig = {
         apiKey: "AIzaSyAFIYOG72TVwBbm_-M4O2fULVbAV5M1c60",
         authDomain: "link-17d13.firebaseapp.com",
         projectId: "link-17d13",
-        storageBucket: "link-17d13.firebasestorage.app",
+        storageBucket: "link-17d13.appspot.com", // ← تم التصحيح هنا
         messagingSenderId: "82805682441",
         appId: "1:82805682441:web:5a921fdcdd2c2a236623d8",
         measurementId: "G-TMQV1S5BPG"
       };
+
       firebase.initializeApp(firebaseConfig);
-
       const auth = firebase.auth();
+      emailjs.init("sCPwwv_HxKqZ4Cv3X");
 
-  <script>
-  emailjs.init("sCPwwv_HxKqZ4Cv3X");
+      const loginBtn = document.getElementById('login-btn');
+      const statusDiv = document.getElementById('status');
 
-  const loginBtn = document.getElementById('login-btn');
-  const statusDiv = document.getElementById('status');
+      loginBtn.onclick = () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+          .then(result => {
+            const user = result.user;
+            console.log("الإيميل:", user.email);
 
-  loginBtn.onclick = () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider)
-      .then(result => {
-        const user = result.user;
-        console.log("الإيميل:", user.email); // ← افحص القيمة هنا
+            if (!user.email) {
+              statusDiv.innerHTML = 'لا يمكن إرسال الرسالة: البريد الإلكتروني غير متوفر';
+              return;
+            }
 
-        if (!user.email) {
-          statusDiv.innerHTML = 'لا يمكن إرسال الرسالة: البريد الإلكتروني غير متوفر';
-          return;
-        }
+            statusDiv.innerHTML = `مرحبًا ${user.displayName}! جاري إرسال رسالة ترحيب...`;
 
-        statusDiv.innerHTML = `مرحبًا ${user.displayName}! جاري إرسال رسالة ترحيب...`;
-
-        emailjs.send('service_xum3xhh', 'template_pq1zshc', {
-          to_name: user.displayName,
-          to_email: user.email,
-        }).then(() => {
-          statusDiv.innerHTML = `تم إرسال رسالة ترحيب إلى ${user.email}`;
-        }).catch(err => {
-          statusDiv.innerHTML = 'حدث خطأ أثناء إرسال الرسالة';
-          console.error(err);
-        });
-      })
-      .catch(err => {
-        statusDiv.innerHTML = 'حدث خطأ أثناء تسجيل الدخول';
-        console.error(err);
-      });
-  };
-</script>
-</script>
+            emailjs.send('service_xum3xhh', 'template_pq1zshc', {
+              to_name: user.displayName,
+              to_email: user.email,
+            }).then(() => {
+              statusDiv.innerHTML = `✅ تم إرسال رسالة ترحيب إلى ${user.email}`;
+            }).catch(err => {
+              statusDiv.innerHTML = '❌ حدث خطأ أثناء إرسال الرسالة';
+              console.error(err);
+            });
+          })
+          .catch(err => {
+            statusDiv.innerHTML = '❌ حدث خطأ أثناء تسجيل الدخول';
+            console.error(err);
+          });
+      };
+    };
+  </script>
 
 </body>
 </html>
