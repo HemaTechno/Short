@@ -1,11 +1,12 @@
 // إعداد Firebase
 const firebaseConfig = {
-  apiKey: "XXXX",
-  authDomain: "XXXX.firebaseapp.com",
-  projectId: "XXXX",
-  storageBucket: "XXXX.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX"
+  apiKey: "AIzaSyAFIYOG72TVwBbm_-M4O2fULVbAV5M1c60",
+  authDomain: "link-17d13.firebaseapp.com",
+  projectId: "link-17d13",
+  storageBucket: "link-17d13.firebasestorage.app",
+  messagingSenderId: "82805682441",
+  appId: "1:82805682441:web:5a921fdcdd2c2a236623d8",
+  measurementId: "G-TMQV1S5BPG"
 };
 
 firebase.initializeApp(firebaseConfig);
