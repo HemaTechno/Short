@@ -5,8 +5,7 @@
   <title>تسجيل دخول جوجل فخم</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://cdn.emailjs.com/sdk/3.2.0/email.min.js"></script>
-
+  
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
 
@@ -89,52 +88,55 @@
   </button>
 
   <div id="status"></div>
-<script src="https://cdn.emailjs.com/sdk/3.2.0/email.min.js"></script>
+
+  <!-- تحميل مكتبة EmailJS قبل أي استخدام لها -->
+  <script src="https://cdn.emailjs.com/sdk/3.2.0/email.min.js"></script>
 
   <script>
-    
-    const firebaseConfig = {
-      apiKey: "AIzaSyAFIYOG72TVwBbm_-M4O2fULVbAV5M1c60",
-      authDomain: "link-17d13.firebaseapp.com",
-      projectId: "link-17d13",
-      storageBucket: "link-17d13.firebasestorage.app",
-      messagingSenderId: "82805682441",
-      appId: "1:82805682441:web:5a921fdcdd2c2a236623d8",
-      measurementId: "G-TMQV1S5BPG"
-    };
-    firebase.initializeApp(firebaseConfig);
+    window.onload = () => {
+      const firebaseConfig = {
+        apiKey: "AIzaSyAFIYOG72TVwBbm_-M4O2fULVbAV5M1c60",
+        authDomain: "link-17d13.firebaseapp.com",
+        projectId: "link-17d13",
+        storageBucket: "link-17d13.firebasestorage.app",
+        messagingSenderId: "82805682441",
+        appId: "1:82805682441:web:5a921fdcdd2c2a236623d8",
+        measurementId: "G-TMQV1S5BPG"
+      };
+      firebase.initializeApp(firebaseConfig);
 
-    const auth = firebase.auth();
+      const auth = firebase.auth();
 
-    // إعداد EmailJS
-    emailjs.init("sCPwwv_HxKqZ4Cv3X");
+      // تهيئة EmailJS بعد تحميل المكتبة
+      emailjs.init("sCPwwv_HxKqZ4Cv3X");
 
-    const loginBtn = document.getElementById('login-btn');
-    const statusDiv = document.getElementById('status');
+      const loginBtn = document.getElementById('login-btn');
+      const statusDiv = document.getElementById('status');
 
-    loginBtn.onclick = () => {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider)
-        .then(result => {
-          const user = result.user;
-          statusDiv.innerHTML = `مرحبًا ${user.displayName}! جاري إرسال رسالة ترحيب...`;
+      loginBtn.onclick = () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+          .then(result => {
+            const user = result.user;
+            statusDiv.innerHTML = `مرحبًا ${user.displayName}! جاري إرسال رسالة ترحيب...`;
 
-          // إرسال إيميل ترحيب عبر EmailJS
-          emailjs.send('service_xum3xhh', 'template_pq1zshc', {
-            to_name: user.displayName,
-            to_email: user.email,
-          }).then(() => {
-            statusDiv.innerHTML = `تم إرسال رسالة ترحيب إلى ${user.email}`;
-          }).catch(err => {
-            statusDiv.innerHTML = 'حدث خطأ أثناء إرسال الرسالة';
+            // إرسال إيميل ترحيب عبر EmailJS
+            emailjs.send('service_xum3xhh', 'template_pq1zshc', {
+              to_name: user.displayName,
+              to_email: user.email,
+            }).then(() => {
+              statusDiv.innerHTML = `تم إرسال رسالة ترحيب إلى ${user.email}`;
+            }).catch(err => {
+              statusDiv.innerHTML = 'حدث خطأ أثناء إرسال الرسالة';
+              console.error(err);
+            });
+          })
+          .catch(err => {
+            statusDiv.innerHTML = 'حدث خطأ أثناء تسجيل الدخول';
             console.error(err);
           });
-        })
-        .catch(err => {
-          statusDiv.innerHTML = 'حدث خطأ أثناء تسجيل الدخول';
-          console.error(err);
-        });
-    };
+      };
+    }
   </script>
 
 </body>
