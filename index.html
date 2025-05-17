@@ -1,44 +1,154 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>موقع اختصار الروابط - Hema</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>موقع اختصار روابط</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; direction: rtl; padding: 20px; background: #f5f5f5; }
+    #dashboard, #logout-btn { display: none; }
+    ul { list-style: none; padding: 0; }
+    li { background: #fff; margin: 5px 0; padding: 10px; border-radius: 5px; }
+    a { color: blue; text-decoration: none; }
+    button { margin-left: 10px; cursor: pointer; }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🔗 موقع اختصار الروابط</h1>
-    
-    <div id="user-info" class="hidden">
-      <p>مرحباً، <span id="user-name"></span></p>
-      <button onclick="logout()">تسجيل الخروج</button>
-    </div>
 
-    <div id="login-section">
-      <button onclick="loginWithGoogle()">تسجيل الدخول باستخدام Google</button>
-    </div>
+  <h1>اختصار روابط - تسجيل الدخول</h1>
+  <button id="login-btn">تسجيل الدخول بجوجل</button>
+  <button id="logout-btn">تسجيل خروج</button>
 
-    <div id="main-app" class="hidden">
-      <h2>إنشاء رابط مختصر</h2>
-      <input type="text" id="long-url" placeholder="أدخل الرابط الطويل">
-      <input type="text" id="custom-alias" placeholder="اسم مخصص (اختياري)">
-      <button onclick="shortenUrl()">اختصر الرابط</button>
-      
-      <div id="result" class="hidden">
-        <p>✅ تم إنشاء الرابط:</p>
-        <input type="text" id="short-url" readonly>
-        <button onclick="copyShortUrl()">نسخ</button>
-      </div>
+  <div id="dashboard">
+    <h2>لوحة تحكم</h2>
+    <input type="text" id="url-input" placeholder="ضع الرابط هنا" style="width: 300px;" />
+    <button id="shorten-btn">اختصر الرابط</button>
 
-      <h3>روابطي</h3>
-      <ul id="my-links"></ul>
-    </div>
+    <h3>روابطك المختصرة:</h3>
+    <ul id="links-list"></ul>
   </div>
 
-  <script src="app.js"></script>
+  <script>
+    // إعداد Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyAFIYOG72TVwBbm_-M4O2fULVbAV5M1c60",
+  authDomain: "link-17d13.firebaseapp.com",
+  projectId: "link-17d13",
+  storageBucket: "link-17d13.firebasestorage.app",
+  messagingSenderId: "82805682441",
+  appId: "1:82805682441:web:5a921fdcdd2c2a236623d8",
+  measurementId: "G-TMQV1S5BPG"
+};
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const loginBtn = document.getElementById('login-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const dashboard = document.getElementById('dashboard');
+    const urlInput = document.getElementById('url-input');
+    const shortenBtn = document.getElementById('shorten-btn');
+    const linksList = document.getElementById('links-list');
+
+    let currentUser = null;
+
+    // تسجيل الدخول
+    loginBtn.onclick = () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).catch(console.error);
+    };
+
+    // تسجيل الخروج
+    logoutBtn.onclick = () => {
+      auth.signOut();
+    };
+
+    // مراقبة حالة تسجيل الدخول
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+        dashboard.style.display = 'block';
+        loadLinks();
+      } else {
+        currentUser = null;
+        loginBtn.style.display = 'inline-block';
+        logoutBtn.style.display = 'none';
+        dashboard.style.display = 'none';
+        linksList.innerHTML = '';
+      }
+    });
+
+    // تحميل روابط المستخدم من Firestore
+    function loadLinks() {
+      linksList.innerHTML = 'جارٍ التحميل...';
+      db.collection('links')
+        .where('uid', '==', currentUser.uid)
+        .orderBy('createdAt', 'desc')
+        .get()
+        .then(snapshot => {
+          linksList.innerHTML = '';
+          if (snapshot.empty) {
+            linksList.innerHTML = '<li>لا يوجد روابط مختصرة حتى الآن.</li>';
+            return;
+          }
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const li = document.createElement('li');
+            li.innerHTML = `
+              <a href="/r.html?id=${data.shortId}" target="_blank">${window.location.origin}/r.html?id=${data.shortId}</a>
+              <button onclick="deleteLink('${doc.id}')">حذف</button>
+            `;
+            linksList.appendChild(li);
+          });
+        })
+        .catch(console.error);
+    }
+
+    // حذف رابط
+    window.deleteLink = function(id) {
+      if (confirm('هل تريد حذف هذا الرابط؟')) {
+        db.collection('links').doc(id).delete().then(() => {
+          loadLinks();
+        });
+      }
+    };
+
+    // إنشاء معرف مختصر عشوائي
+    function generateShortId(length = 6) {
+      return Math.random().toString(36).substr(2, length);
+    }
+
+    // اختصار الرابط وحفظه في Firestore
+    shortenBtn.onclick = () => {
+      const originalUrl = urlInput.value.trim();
+      if (!originalUrl) {
+        alert('الرجاء إدخال رابط صالح');
+        return;
+      }
+      const shortId = generateShortId();
+
+      db.collection('links').add({
+        uid: currentUser.uid,
+        originalUrl,
+        shortId,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(() => {
+        alert('تم اختصار الرابط!');
+        urlInput.value = '';
+        loadLinks();
+      })
+      .catch(err => {
+        alert('حدث خطأ، حاول مرة أخرى');
+        console.error(err);
+      });
+    };
+  </script>
+
 </body>
 </html>
