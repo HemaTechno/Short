@@ -2,37 +2,19 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8" />
-  <title>موقع اختصار روابط</title>
+  <title>تسجيل دخول بجوجل + إرسال رسالة ترحيب</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; direction: rtl; padding: 20px; background: #f5f5f5; }
-    #dashboard, #logout-btn { display: none; }
-    ul { list-style: none; padding: 0; }
-    li { background: #fff; margin: 5px 0; padding: 10px; border-radius: 5px; }
-    a { color: blue; text-decoration: none; }
-    button { margin-left: 10px; cursor: pointer; }
-  </style>
+  <script src="https://cdn.emailjs.com/sdk/3.2.0/email.min.js"></script>
 </head>
 <body>
-
-  <h1>اختصار روابط - تسجيل الدخول</h1>
+  <h1>تسجيل دخول بجوجل وإرسال رسالة ترحيب</h1>
   <button id="login-btn">تسجيل الدخول بجوجل</button>
-  <button id="logout-btn">تسجيل خروج</button>
-
-  <div id="dashboard">
-    <h2>لوحة تحكم</h2>
-    <input type="text" id="url-input" placeholder="ضع الرابط هنا" style="width: 300px;" />
-    <button id="shorten-btn">اختصر الرابط</button>
-
-    <h3>روابطك المختصرة:</h3>
-    <ul id="links-list"></ul>
-  </div>
+  <div id="status"></div>
 
   <script>
     // إعداد Firebase
-const firebaseConfig = {
+    const firebaseConfig = {
   apiKey: "AIzaSyAFIYOG72TVwBbm_-M4O2fULVbAV5M1c60",
   authDomain: "link-17d13.firebaseapp.com",
   projectId: "link-17d13",
@@ -44,111 +26,36 @@ const firebaseConfig = {
     firebase.initializeApp(firebaseConfig);
 
     const auth = firebase.auth();
-    const db = firebase.firestore();
+
+    // إعداد EmailJS
+    emailjs.init("sCPwwv_HxKqZ4Cv3X"); // Public Key
 
     const loginBtn = document.getElementById('login-btn');
-    const logoutBtn = document.getElementById('logout-btn');
-    const dashboard = document.getElementById('dashboard');
-    const urlInput = document.getElementById('url-input');
-    const shortenBtn = document.getElementById('shorten-btn');
-    const linksList = document.getElementById('links-list');
+    const statusDiv = document.getElementById('status');
 
-    let currentUser = null;
-
-    // تسجيل الدخول
     loginBtn.onclick = () => {
       const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).catch(console.error);
-    };
+      auth.signInWithPopup(provider)
+        .then(result => {
+          const user = result.user;
+          statusDiv.innerHTML = `مرحبًا ${user.displayName}! جاري إرسال رسالة ترحيب...`;
 
-    // تسجيل الخروج
-    logoutBtn.onclick = () => {
-      auth.signOut();
-    };
-
-    // مراقبة حالة تسجيل الدخول
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUser = user;
-        loginBtn.style.display = 'none';
-        logoutBtn.style.display = 'inline-block';
-        dashboard.style.display = 'block';
-        loadLinks();
-      } else {
-        currentUser = null;
-        loginBtn.style.display = 'inline-block';
-        logoutBtn.style.display = 'none';
-        dashboard.style.display = 'none';
-        linksList.innerHTML = '';
-      }
-    });
-
-    // تحميل روابط المستخدم من Firestore
-    function loadLinks() {
-      linksList.innerHTML = 'جارٍ التحميل...';
-      db.collection('links')
-        .where('uid', '==', currentUser.uid)
-        .orderBy('createdAt', 'desc')
-        .get()
-        .then(snapshot => {
-          linksList.innerHTML = '';
-          if (snapshot.empty) {
-            linksList.innerHTML = '<li>لا يوجد روابط مختصرة حتى الآن.</li>';
-            return;
-          }
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            const li = document.createElement('li');
-            li.innerHTML = `
-              <a href="/r.html?id=${data.shortId}" target="_blank">${window.location.origin}/r.html?id=${data.shortId}</a>
-              <button onclick="deleteLink('${doc.id}')">حذف</button>
-            `;
-            linksList.appendChild(li);
+          // إرسال إيميل ترحيب عبر EmailJS
+          emailjs.send('service_xum3xhh', 'template_pq1zshc', {
+            to_name: user.displayName,
+            to_email: user.email,
+          }).then(() => {
+            statusDiv.innerHTML = `تم إرسال رسالة ترحيب إلى ${user.email}`;
+          }).catch(err => {
+            statusDiv.innerHTML = 'حدث خطأ أثناء إرسال الرسالة';
+            console.error(err);
           });
         })
-        .catch(console.error);
-    }
-
-    // حذف رابط
-    window.deleteLink = function(id) {
-      if (confirm('هل تريد حذف هذا الرابط؟')) {
-        db.collection('links').doc(id).delete().then(() => {
-          loadLinks();
+        .catch(err => {
+          statusDiv.innerHTML = 'حدث خطأ أثناء تسجيل الدخول';
+          console.error(err);
         });
-      }
-    };
-
-    // إنشاء معرف مختصر عشوائي
-    function generateShortId(length = 6) {
-      return Math.random().toString(36).substr(2, length);
-    }
-
-    // اختصار الرابط وحفظه في Firestore
-    shortenBtn.onclick = () => {
-      const originalUrl = urlInput.value.trim();
-      if (!originalUrl) {
-        alert('الرجاء إدخال رابط صالح');
-        return;
-      }
-      const shortId = generateShortId();
-
-      db.collection('links').add({
-        uid: currentUser.uid,
-        originalUrl,
-        shortId,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      })
-      .then(() => {
-        alert('تم اختصار الرابط!');
-        urlInput.value = '';
-        loadLinks();
-      })
-      .catch(err => {
-        alert('حدث خطأ، حاول مرة أخرى');
-        console.error(err);
-      });
     };
   </script>
-
 </body>
 </html>
