@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>جارٍ التحويل...</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body style="background-color:#121212; color:white; font-family:sans-serif; text-align:center; padding-top:100px;">
+  <h2>🔁 جاري تحويلك إلى الرابط...</h2>
+  <p id="status">يرجى الانتظار...</p>
+
+  <script>
+    // إعداد Firebase
+    const firebaseConfig = {
+      apiKey: "XXXX",
+      authDomain: "XXXX.firebaseapp.com",
+      projectId: "XXXX",
+      storageBucket: "XXXX.appspot.com",
+      messagingSenderId: "XXXX",
+      appId: "XXXX"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // جلب المعرف من رابط الصفحة
+    const alias = window.location.pathname.split('/')[1];
+
+    if (alias) {
+      const docRef = db.collection("shortLinks").doc(alias);
+      docRef.get().then((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          // زيادة عدد الضغطات
+          docRef.update({
+            clicks: firebase.firestore.FieldValue.increment(1)
+          });
+
+          // التحويل بعد ثواني بسيطة
+          document.getElementById("status").textContent = "سيتم تحويلك خلال ثانيتين...";
+          setTimeout(() => {
+            window.location.href = data.originalUrl;
+          }, 2000);
+
+        } else {
+          document.getElementById("status").textContent = "❌ الرابط غير موجود.";
+        }
+      }).catch((error) => {
+        console.error("خطأ:", error);
+        document.getElementById("status").textContent = "حدث خطأ أثناء التحويل.";
+      });
+    } else {
+      document.getElementById("status").textContent = "❌ الرابط غير صالح.";
+    }
+  </script>
+</body>
+</html>
