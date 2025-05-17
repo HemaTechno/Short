@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <title>تسجيل دخول جوجل فخم</title>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+  <!-- EmailJS -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
-
     body {
       background: linear-gradient(135deg, #1e1e2f, #3b3b5c);
       font-family: 'Cairo', sans-serif;
@@ -46,7 +49,6 @@
       gap: 15px;
       box-shadow: 0 6px 12px rgba(66, 133, 244, 0.6);
       transition: all 0.3s ease;
-      user-select: none;
     }
 
     #login-btn:hover {
@@ -55,21 +57,9 @@
       transform: translateY(-3px);
     }
 
-    #login-btn:active {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(53, 122, 232, 0.7);
-    }
-
-    #login-btn svg {
-      width: 24px;
-      height: 24px;
-      fill: white;
-    }
-
     #status {
       margin-top: 30px;
       font-size: 1.1rem;
-      min-height: 1.5em;
       color: #ffd700;
       text-shadow: 0 0 4px #ffd700;
     }
@@ -80,7 +70,7 @@
   <h1>تسجيل دخول باستخدام حساب جوجل</h1>
 
   <button id="login-btn">
-    <svg viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white">
       <path d="M533.5 278.4c0-18.4-1.6-36-4.6-53.2H272.1v100.8h147.3c-6.4 34.7-26.3 64.2-56.1 83.9v69h90.6c53.1-49 83.6-121 83.6-200.5z" fill="#4285F4"/>
       <path d="M272.1 544.3c76.6 0 141-25.3 188-68.9l-90.6-69c-25.1 17-57.4 27-97.4 27-74.9 0-138.5-50.6-161.2-118.4h-95.4v74.5c46.3 92.2 140 154.8 256.6 154.8z" fill="#34A853"/>
       <path d="M110.9 327.7c-11.4-34-11.4-70.6 0-104.6v-74.5h-95.4c-38.7 76.8-38.7 168.4 0 245.2l95.4-66.1z" fill="#FBBC05"/>
@@ -92,55 +82,52 @@
   <div id="status"></div>
 
   <script>
-    window.onload = () => {
-      const firebaseConfig = {
-        apiKey: "AIzaSyAFIYOG72TVwBbm_-M4O2fULVbAV5M1c60",
-        authDomain: "link-17d13.firebaseapp.com",
-        projectId: "link-17d13",
-        storageBucket: "link-17d13.appspot.com", // ← تم التصحيح هنا
-        messagingSenderId: "82805682441",
-        appId: "1:82805682441:web:5a921fdcdd2c2a236623d8",
-        measurementId: "G-TMQV1S5BPG"
-      };
+    // إعداد Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAFIYOG72TVwBbm_-M4O2fULVbAV5M1c60",
+      authDomain: "link-17d13.firebaseapp.com",
+      projectId: "link-17d13",
+      storageBucket: "link-17d13.appspot.com",
+      messagingSenderId: "82805682441",
+      appId: "1:82805682441:web:5a921fdcdd2c2a236623d8"
+    };
+    firebase.initializeApp(firebaseConfig);
 
-      firebase.initializeApp(firebaseConfig);
-      const auth = firebase.auth();
-      emailjs.init("sCPwwv_HxKqZ4Cv3X");
+    const auth = firebase.auth();
+    const loginBtn = document.getElementById('login-btn');
+    const statusDiv = document.getElementById('status');
 
-      const loginBtn = document.getElementById('login-btn');
-      const statusDiv = document.getElementById('status');
+    // إعداد EmailJS
+    emailjs.init("sCPwwv_HxKqZ4Cv3X");
 
-      loginBtn.onclick = () => {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider)
-          .then(result => {
-            const user = result.user;
-            console.log("الإيميل:", user.email);
+    loginBtn.onclick = () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(result => {
+          const user = result.user;
 
-            if (!user.email) {
-              statusDiv.innerHTML = 'لا يمكن إرسال الرسالة: البريد الإلكتروني غير متوفر';
-              return;
-            }
+          if (!user.email) {
+            statusDiv.innerHTML = '❌ البريد الإلكتروني غير متاح!';
+            return;
+          }
 
-            statusDiv.innerHTML = `مرحبًا ${user.displayName}! جاري إرسال رسالة ترحيب...`;
+          statusDiv.innerHTML = `✅ مرحبًا ${user.displayName}! يتم الآن إرسال رسالة...`;
 
-            emailjs.send('service_xum3xhh', 'template_pq1zshc', {
-              to_name: user.displayName,
-              to_email: user.email,
-            }).then(() => {
-              statusDiv.innerHTML = `✅ تم إرسال رسالة ترحيب إلى ${user.email}`;
-            }).catch(err => {
-              statusDiv.innerHTML = '❌ حدث خطأ أثناء إرسال الرسالة';
-              console.error(err);
-            });
-          })
-          .catch(err => {
-            statusDiv.innerHTML = '❌ حدث خطأ أثناء تسجيل الدخول';
-            console.error(err);
+          emailjs.send("service_xum3xhh", "template_pq1zshc", {
+            to_name: user.displayName || "مستخدم",
+            to_email: user.email
+          }).then(() => {
+            statusDiv.innerHTML = `✅ تم إرسال رسالة ترحيب إلى ${user.email}`;
+          }).catch(err => {
+            statusDiv.innerHTML = '❌ فشل في إرسال الرسالة!';
+            console.error("EmailJS Error:", err);
           });
-      };
+        })
+        .catch(err => {
+          statusDiv.innerHTML = '❌ فشل في تسجيل الدخول!';
+          console.error("Firebase Error:", err);
+        });
     };
   </script>
-
 </body>
 </html>
